@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	SpeedMultiplier = 1.15,

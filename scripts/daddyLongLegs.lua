@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	SoundTimer = 30,
@@ -37,7 +36,7 @@ function mod:daddyLongLegsUpdate(entity)
 			if data.timer <= 0 then
 				data.timer = Settings.SoundTimer
 				SFXManager():Play(SoundEffect.SOUND_FORESTBOSS_STOMPS, 0.75)
-				game:ShakeScreen(Settings.MoveScreenShake)
+				Game():ShakeScreen(Settings.MoveScreenShake)
 			else
 				data.timer = data.timer - 1
 
@@ -75,7 +74,7 @@ function mod:daddyLongLegsUpdate(entity)
 
 		-- Align position to grid
 		elseif entity.FrameCount <= 1 then
-			entity.Position = game:GetRoom():GetGridPosition(game:GetRoom():GetGridIndex(entity.Position))
+			entity.Position = Game():GetRoom():GetGridPosition(Game():GetRoom():GetGridIndex(entity.Position))
 		end
 	
 	
@@ -95,9 +94,15 @@ function mod:daddyLongLegsUpdate(entity)
 	elseif entity.State == NpcState.STATE_APPEAR_CUSTOM then
 		if sprite:IsEventTriggered("Land") then
 			entity.EntityCollisionClass = EntityCollisionClass.ENTCOLL_ALL
+
 			SFXManager():Play(SoundEffect.SOUND_FORESTBOSS_STOMPS, 1.1)
 			SFXManager():Play(SoundEffect.SOUND_HELLBOSS_GROUNDPOUND, 1.1)
-			game:ShakeScreen(Settings.HeadSmashScreenShake)
+			Game():ShakeScreen(Settings.HeadSmashScreenShake)
+			Game():MakeShockwave(entity.Position, 0.035, 0.025, 10)
+
+			local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 2, entity.Position, Vector.Zero, entity):ToEffect()
+			effect.Scale = 1.5
+			effect.DepthOffset = entity.DepthOffset + 10
 
 			local params = ProjectileParams()
 			-- Daddy Long Legs

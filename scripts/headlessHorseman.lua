@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -31,7 +30,7 @@ function mod:headlessHorsemanHeadUpdate(entity)
 
 		-- Charge at the target horizontally
 		if entity.State == NpcState.STATE_ATTACK then
-			local room = game:GetRoom()
+			local room = Game():GetRoom()
 
 			if entity.Position.X > room:GetBottomRightPos().X + 120 or entity.Position.X < room:GetTopLeftPos().X - 120 then
 				entity.Position = Vector(entity.Position.X, entity:GetPlayerTarget().Position.Y)

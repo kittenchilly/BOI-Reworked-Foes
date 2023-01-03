@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	DoubleStompCooldown = 240,
@@ -19,6 +18,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.satanInit, EntityType.ENTITY_
 
 function mod:satanUpdate(entity)
 	local sprite = entity:GetSprite()
+	local target = entity:GetPlayerTarget()
 
 	-- 1st phase
 	if entity.Variant == 0 then
@@ -31,52 +31,26 @@ function mod:satanUpdate(entity)
 
 				params.Scale = 1.25
 				params.CircleAngle = 0
-				entity:FireProjectiles(Vector(entity.Position.X, game:GetRoom():GetBottomRightPos().Y - 1), Vector(Settings.LaserShotSpeed, 16), 9, params)
+				entity:FireProjectiles(Vector(entity.Position.X, Game():GetRoom():GetBottomRightPos().Y - 1), Vector(Settings.LaserShotSpeed, 16), 9, params)
 				
 				params.CircleAngle = 0.41
 				params.Scale = 1.75
-				entity:FireProjectiles(Vector(entity.Position.X, game:GetRoom():GetBottomRightPos().Y - 1), Vector(Settings.LaserShotSpeed - 5, 8), 9, params)
-			end
-
-
-		-- Custom hand laser attack
-		elseif entity.State == NpcState.STATE_ATTACK3 then
-			entity.State = NpcState.STATE_SUMMON
-			entity:SetColor(Color(1,1,1, 1, 0.7,0,0), 15, 1, true, false)
-
-		elseif entity.State == NpcState.STATE_SUMMON then
-			if sprite:GetFrame() == 3 then
-				entity.V2 = entity:GetPlayerTarget().Position
-			end
-			if sprite:IsEventTriggered("Shoot") then
-				for i = -1, 1, 2 do
-					local laser_ent_pair = {laser = EntityLaser.ShootAngle(1, entity.Position, (entity.V2 - (entity.Position + Vector(i * 100, -60))):GetAngleDegrees(), 20, Vector.Zero, entity), entity}
-					laser_ent_pair.laser.ParentOffset = Vector(i * 100, -60)
-					laser_ent_pair.laser.DepthOffset = entity.DepthOffset + 100
-				end
-			end
-			if sprite:IsFinished("Attack03") then
-				entity.State = NpcState.STATE_MOVE
+				entity:FireProjectiles(Vector(entity.Position.X, Game():GetRoom():GetBottomRightPos().Y - 1), Vector(Settings.LaserShotSpeed - 5, 8), 9, params)
 			end
 
 
 		-- Custom hand bullet attack
 		elseif entity.State == NpcState.STATE_ATTACK4 then
-			if math.random(0, 2) == 1 then
-				entity.State = NpcState.STATE_ATTACK3
-				entity:PlaySound(SoundEffect.SOUND_SATAN_CHARGE_UP, 1, 0, false, 1)
-			else
-				entity.State = NpcState.STATE_ATTACK5
-			end
+			entity.State = NpcState.STATE_ATTACK5
 
 		elseif entity.State == NpcState.STATE_ATTACK5 then
 			if sprite:IsEventTriggered("Shoot") then
-				entity:PlaySound(SoundEffect.SOUND_SATAN_BLAST, 1, 0, false, 1)
+				entity:PlaySound(SoundEffect.SOUND_SATAN_BLAST, 0.9, 0, false, 1)
 
 				local params = ProjectileParams()
 				params.Scale = 1.5
 				for i = -1, 1, 2 do
-					entity:FireProjectiles(entity.Position + Vector(i * 90, -40), Vector.FromAngle((entity:GetPlayerTarget().Position - entity.Position):GetAngleDegrees() - i * 15) * Settings.HandShotSpeed, 5, params)
+					entity:FireProjectiles(entity.Position + Vector(i * 90, -40), Vector.FromAngle((target.Position - entity.Position):GetAngleDegrees() - i * 15) * Settings.HandShotSpeed, 5, params)
 				end
 			end
 			if sprite:IsFinished("Attack03") then
@@ -142,13 +116,9 @@ function mod:kLeechInit(entity)
 	if entity.Variant == 1 and entity.SpawnerEntity and entity.SpawnerType == EntityType.ENTITY_SATAN then
 		entity:Remove()
 
-		-- 1st phase
+		-- Fallen phase Nulls
 		if entity.SpawnerVariant == 0 then
 			Isaac.Spawn(EntityType.ENTITY_NULLS, 0, 0, entity.Position, Vector.Zero, entity.SpawnerEntity)
-
-		-- 2nd phase
-		--elseif entity.SpawnerVariant == 10 and entity.SpawnerEntity:ToNPC().I2 == 0 then
-			--Isaac.Spawn(EntityType.ENTITY_SUCKER, 0, 0, entity.Position, Vector.Zero, entity.SpawnerEntity)
 		end
 	end
 end

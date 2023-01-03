@@ -1,23 +1,24 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	CoinHealPercentage = 5,
 	CoinCollectRange = 20,
-	CoinMagnetRange = 50
+	CoinMagnetRange = 40
 }
 
 
 
--- Function for letting greed enemies collect pickups
+-- Function for making greedy enemies collect pickups
 local function greedCollect(entity)
-	if not game:IsGreedMode() then -- Don't pick up coins in greed mode
+	-- Don't pick up coins in greed mode
+	if not Game():IsGreedMode() then
 		for _, pickup in pairs(Isaac.FindInRadius(entity.Position, Settings.CoinMagnetRange, EntityPartition.PICKUP)) do
 			if not entity:IsDead() and pickup.Variant == PickupVariant.PICKUP_COIN and not pickup:ToPickup():IsShopItem() and pickup:ToPickup():CanReroll() == true and not pickup:GetData().greedRobber then
 				if (entity.Position - pickup.Position):Length() <= Settings.CoinCollectRange then
-					pickup:GetData().greedRobber = entity
-				elseif game:GetRoom():CheckLine(entity.Position, pickup.Position, 0, 0, false, false) and pickup.SubType ~= CoinSubType.COIN_STICKYNICKEL then
-					pickup.Position = (pickup.Position + (entity.Position - pickup.Position) * 0.25)
+					pickup:GetData().greedRobber = entity:ToNPC()
+
+				elseif Game():GetRoom():CheckLine(entity.Position, pickup.Position, 0, 0, false, false) and pickup.SubType ~= CoinSubType.COIN_STICKYNICKEL then
+					pickup.Position = mod:Lerp(pickup.Position, entity.Position, 0.2)
 				end
 			end
 		end
@@ -43,6 +44,10 @@ function mod:greedRobPickup(entity)
 				multiplier = 2
 			end
 			data.greedRobber:AddHealth((data.greedRobber.MaxHitPoints / 100) * Settings.CoinHealPercentage * multiplier)
+
+			if data.greedRobber.Type == EntityType.ENTITY_KEEPER and data.greedRobber.Variant == IRFentities.coffer then
+				data.greedRobber.I1 = data.greedRobber.I1 + multiplier
+			end
 		end
 		data.greedRobber = nil
 	end
@@ -88,6 +93,22 @@ function mod:greedUpdate(entity)
 					entity.State = NpcState.STATE_MOVE
 				end
 			end
+		end
+
+
+		-- Unique death for champion Greed
+		if entity.SubType == 1 and entity:HasMortalDamage() then
+			SFXManager():Play(SoundEffect.SOUND_ULTRA_GREED_COIN_DESTROY)
+
+			-- Particles
+			for i = 0, 7 do
+				Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.GOLD_PARTICLE, 0, entity.Position, Vector.FromAngle(math.random(0, 359)) * math.random(1, 5), entity)
+			end
+
+			local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, entity.Position, Vector.Zero, entity):GetSprite()
+			effect:Load("gfx/293.000_ultragreedcoins.anm2", true)
+			effect:Play("CrumbleNoDebris", true)
+			effect.Scale = Vector(0.7, 0.7)
 		end
 	end
 
@@ -149,7 +170,7 @@ function mod:cofferReplace(entity)
 		entity:Remove() -- Properly sets their stage HP
 
 		if entity.SpawnerEntity.SubType == 0 then
-			Isaac.Spawn(EntityType.ENTITY_KEEPER, IRFentities.cofferVariant, 0, entity.Position, Vector.Zero, entity.SpawnerEntity):Update()
+			Isaac.Spawn(EntityType.ENTITY_KEEPER, IRFentities.coffer, 0, entity.Position, Vector.Zero, entity.SpawnerEntity):Update()
 
 		elseif entity.SpawnerEntity.SubType == 1 then
 			local coin = Isaac.Spawn(EntityType.ENTITY_ULTRA_COIN, 2, 0, entity.Position, Vector.Zero, entity.SpawnerEntity)
@@ -163,9 +184,9 @@ mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.cofferReplace, EntityType.ENT
 function mod:cofferUpdate(entity)
 	local sprite = entity:GetSprite()
 
-	if entity.Variant == IRFentities.cofferVariant then
+	if entity.Variant == IRFentities.coffer then
 		-- Go towards coins
-		if not game:IsGreedMode() then
+		if not Game():IsGreedMode() then
 			for _, pickup in pairs(Isaac.FindInRadius(entity.Position, 120, EntityPartition.PICKUP)) do
 				if not entity:IsDead() and pickup.Variant == PickupVariant.PICKUP_COIN and not pickup:ToPickup():IsShopItem() and pickup:ToPickup():CanReroll() == true then
 					entity.Target = pickup
@@ -185,6 +206,22 @@ function mod:cofferUpdate(entity)
 	end
 end
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mod.cofferUpdate, EntityType.ENTITY_KEEPER)
+
+function mod:cofferDeath(entity)
+	if entity.Variant == IRFentities.coffer and entity.I1 > 0 then
+		local params = ProjectileParams()
+		params.Variant = ProjectileVariant.PROJECTILE_COIN
+
+		if entity.I1 >= 8 then
+			entity:FireProjectiles(entity.Position, Vector(8, 6), 9, params)
+		elseif entity.I1 >= 4 then
+			entity:FireProjectiles(entity.Position, Vector(8, 4), math.random(6, 7), params)
+		else
+			entity:FireProjectiles(entity.Position, Vector(8, 3), 9, params)
+		end
+	end
+end
+mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, mod.cofferDeath, EntityType.ENTITY_KEEPER)
 
 
 

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	SpeedMultiplier = 0.9,
@@ -13,6 +12,7 @@ local Settings = {
 function mod:raglingInit(entity)
 	if entity.Variant == 1 then
 		entity.MaxHitPoints = 25 -- Same as the HP for Ragman's head
+		entity.SplatColor = ragManBloodColor
 
 		if entity.SpawnerType == EntityType.ENTITY_RAG_MAN and entity.SpawnerVariant == 1 and entity.SpawnerEntity then
 			entity.HitPoints = entity.SpawnerEntity.HitPoints
@@ -75,6 +75,20 @@ function mod:raglingUpdate(entity)
 			entity.State = NpcState.STATE_MOVE
 		end
 	end
+	
+	
+	-- Fix Rag Man's dead raglings rendering above entities
+	if entity.Variant == 1 then
+		if entity.State == NpcState.STATE_SPECIAL then
+			if entity.V2 == Vector.Zero then
+				entity.V2 = Vector(entity.DepthOffset, 0)
+			end
+			entity.DepthOffset = -1000
+		
+		elseif entity.State == NpcState.STATE_APPEAR_CUSTOM then
+			entity.DepthOffset = entity.V2.X
+		end
+	end
 end
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mod.raglingUpdate, EntityType.ENTITY_RAGLING)
 
@@ -129,7 +143,7 @@ function mod:raglingRagsUpdate(entity)
 
 		-- Attack
 		if entity.ProjectileCooldown <= 0 then
-			if entity.Position:Distance(target.Position) <= Settings.Range and game:GetRoom():CheckLine(entity.Position, target.Position, 3, 0, false, false) and entity.Child then
+			if entity.Position:Distance(target.Position) <= Settings.Range and Game():GetRoom():CheckLine(entity.Position, target.Position, 3, 0, false, false) and entity.Child then
 				mod:LoopingAnim(sprite, "Attack")
 			end
 			

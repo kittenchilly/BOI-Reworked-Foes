@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -12,7 +11,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, mod.drownedBoomFlyUpdate, Entity
 
 function mod:drownedBoomFlyDeath(entity)
 	if entity.Variant == 2 then
-		game:BombExplosionEffects(entity.Position, 100, TearFlags.TEAR_NORMAL, Color(1,1,1, 1, 0,0,0.1), entity, 1, true, true, DamageFlag.DAMAGE_EXPLOSION)
+		Game():BombExplosionEffects(entity.Position, 100, TearFlags.TEAR_NORMAL, Color(1,1,1, 1, 0,0,0.1), entity, 1, true, true, DamageFlag.DAMAGE_EXPLOSION)
 		Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BIG_SPLASH, 0, entity.Position, Vector.Zero, entity)
 
 		local params = ProjectileParams()

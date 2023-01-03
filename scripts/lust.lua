@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	TouchHeal = 10,
@@ -8,7 +7,7 @@ local Settings = {
 
 	GrowAmount = 1.15,
 
-	CreepScale = 3,
+	CreepScale = 2.25,
 	CreepTime = 180,
 
 	ItemHeal = 15,
@@ -63,10 +62,6 @@ local cardVoiceLines = {
 	SoundEffect.SOUND_FOOL
 }
 
-local speedUpColor = Color(1,1,0.5, 1)
-local lemonBulletColor = Color(1,1,0, 1, 0.25,0.25,0)
-lemonBulletColor:SetColorize(1, 1, 0.25, 1)
-
 
 
 function mod:lustInit(entity)
@@ -91,20 +86,20 @@ function mod:lustUpdate(entity)
 	if mod:CheckForRev() == false and ((entity.Variant == 0 and entity.SubType <= 1) or entity.Variant == 1) then
 		local sprite = entity:GetSprite()
 		local data = entity:GetData()
-		local room = game:GetRoom()
+		local room = Game():GetRoom()
 
 
 		-- Lasting effects --
 		-- Nerf their speed a bit if they don't have a speed up
 		if data.speedUp == true then
-			entity:SetColor(speedUpColor, 10, 10, false, true)
+			entity:SetColor(Color(1,1,0.5, 1), 10, 10, false, true)
 		else
 			entity.Velocity = entity.Velocity * Settings.SpeedNerf
 		end
 
 		-- Destroy rocks
 		if data.crushRocks == true then
-			local grid = game:GetRoom():GetGridEntityFromPos(entity.Position + (entity.Velocity:Normalized() * (entity.Scale * 26)))
+			local grid = room:GetGridEntityFromPos(entity.Position + (entity.Velocity:Normalized() * (entity.Scale * 26)))
 			if grid ~= nil and grid.CollisionClass < 4 and grid.CollisionClass > 1 then
 				grid:Destroy(true)
 			end
@@ -168,7 +163,7 @@ function mod:lustUpdate(entity)
 		if entity.State == NpcState.STATE_ATTACK then
 			mod:LoopingAnim(sprite, "Use0" .. entity.I2)
 
-			if sprite:GetFrame() == 2 then
+			if sprite:GetFrame() == 4 then
 				local playSFX = false
 
 				-- One time use effects --
@@ -177,25 +172,26 @@ function mod:lustUpdate(entity)
 					playSFX = true
 					entity.Scale = entity.Scale * Settings.GrowAmount
 					data.crushRocks = true
+					entity:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
 
 
-				-- Pretty flies / Bony
+				-- Pretty flies / Bone orbitals
 				elseif entity.I2 == 2 then
 					if entity.SubType == 1 then
 						SFXManager():Play(SoundEffect.SOUND_SUMMONSOUND)
-						Isaac.Spawn(EntityType.ENTITY_BONY, 0, 0, entity.Position + Vector(0, 10), Vector.Zero, entity)
+						for i = 0, 3 do
+							Isaac.Spawn(200, IRFentities.boneOrbital, 0, entity.Position, Vector.Zero, entity).Parent = entity
+						end
 
 					else
 						playSFX = true
 						for i = 1, 1 + entity.Variant do
-							local fly = Isaac.Spawn(EntityType.ENTITY_ETERNALFLY, 0, 0, entity.Position, Vector.Zero, entity)
-							fly.Parent = entity
-							entity.Child = fly
+							Isaac.Spawn(EntityType.ENTITY_ETERNALFLY, 0, 0, entity.Position, Vector.Zero, entity).Parent = entity
 						end
 					end
 
 
-				-- Speed up / 
+				-- Speed up
 				elseif entity.I2 == 3 then
 					if entity.SubType == 1 then
 						SFXManager():Play(SoundEffect.SOUND_BLOODBANK_SPAWN)
@@ -211,18 +207,21 @@ function mod:lustUpdate(entity)
 				elseif entity.I2 == 4 then
 					if entity.SubType == 1 then
 						SFXManager():Play(SoundEffect.SOUND_MOM_VOX_EVILLAUGH, 0.8)
-						Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.MOM_FOOT_STOMP, 0, entity:GetPlayerTarget().Position, Vector.Zero, entity).Target = entity:GetPlayerTarget()
+						local foot = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.MOM_FOOT_STOMP, 0, entity:GetPlayerTarget().Position, Vector.Zero, entity)
+						foot.Target = entity:GetPlayerTarget()
+						foot:GetSprite().PlaybackSpeed = 0.95
 
 					else
-						SFXManager():Play(SoundEffect.SOUND_GASCAN_POUR)
-						mod:QuickCreep(EffectVariant.CREEP_YELLOW, entity, entity.Position, Settings.CreepScale, Settings.CreepTime)
-						
 						if entity.Variant == 1 then
-							local params = ProjectileParams()
-							params.Color = lemonBulletColor
-							entity:FireBossProjectiles(6, Vector.Zero, 4, params)
-							entity:FireBossProjectiles(6, Vector.Zero, 8, params)
+							for i = 1, 4 do
+								mod:QuickCreep(EffectVariant.CREEP_YELLOW, entity, entity.Position + (Vector.FromAngle(i * 90) * 40), Settings.CreepScale, (Settings.CreepTime / 3) * 2)
+							end
+						else
+							mod:QuickCreep(EffectVariant.CREEP_YELLOW, entity, entity.Position, Settings.CreepScale, Settings.CreepTime)
 						end
+
+						mod:shootEffect(entity, 4, Vector.Zero, Color(0,0,0, 1, 1,1,0), 1, true)
+						SFXManager():Play(SoundEffect.SOUND_GASCAN_POUR)
 					end
 
 
@@ -265,7 +264,7 @@ function mod:lustUpdate(entity)
 					end
 
 
-				-- Friends till the end flies / hermit Keeper
+				-- Friends till the end flies / Hermit Greed Gaper
 				elseif entity.I2 == 7 then
 					if entity.SubType == 1 then
 						SFXManager():Play(SoundEffect.SOUND_SUMMONSOUND)
@@ -299,7 +298,7 @@ function mod:lustUpdate(entity)
 							Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.SMOKE_CLOUD, 0, entity.Position, Vector.Zero, entity):ToEffect().Scale = (Settings.CloudScale * entity.Scale) -- Poison cloud
 						end
 
-						game:Fart(entity.Position, 85 * entity.Scale * fartScale, entity, entity.Scale * fartScale, 0, Color.Default)
+						Game():Fart(entity.Position, 85 * entity.Scale * fartScale, entity, entity.Scale * fartScale, 0, Color.Default)
 					end
 
 
@@ -318,9 +317,19 @@ function mod:lustUpdate(entity)
 
 					entity.Position = position
 					entity.Velocity = Vector.Zero
+
 					-- Also teleport any orbitals
-					if entity.Child then
-						entity.Child.Position = entity.Position
+					local type = EntityType.ENTITY_ETERNALFLY
+					local variant = 0
+					if entity.SubType == 1 then
+						type = 200
+						variant = IRFentities.boneOrbital
+					end
+
+					for i, children in pairs(Isaac.FindByType(type, variant, -1, false, true)) do
+						if children.Parent.Index == entity.Index then
+							children.Position = entity.Position
+						end
 					end
 				end
 

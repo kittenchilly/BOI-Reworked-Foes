@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -30,6 +29,11 @@ function mod:scarredParaBiteUpdate(entity)
 		elseif entity.State == NpcState.STATE_ATTACK then
 			if sprite:IsEventTriggered("Shoot") then
 				entity:PlaySound(SoundEffect.SOUND_BOSS2_BUBBLES, 0.6, 0, false, 1)
+				if sprite:GetFrame() < 12 then
+					local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 4, entity.Position, Vector.Zero, entity):GetSprite()
+					effect.Scale = Vector(0.5, 0.5)
+					effect.Offset = Vector(entity.Scale * 3, entity.Scale * -6)
+				end
 				
 				local params = ProjectileParams()
 				params.BulletFlags = (ProjectileFlags.NO_WALL_COLLIDE | ProjectileFlags.DECELERATE | ProjectileFlags.CHANGE_FLAGS_AFTER_TIMEOUT)

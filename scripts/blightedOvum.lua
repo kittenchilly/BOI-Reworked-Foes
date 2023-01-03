@@ -1,7 +1,7 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
+	NewHP = 250,
 	Cooldown = {80, 110},
 	TransparencyTimer = 10,
 
@@ -13,9 +13,6 @@ local Settings = {
 	CreepTime = 100,
 }
 
-ghostTrailColor = Color(1,1,1, 0.25, 0.5,0.5,0.5)
-ghostTrailColor:SetColorize(1, 1, 1, 1)
-
 
 
 function mod:blightedOvumInit(entity)
@@ -23,7 +20,7 @@ function mod:blightedOvumInit(entity)
 		entity.ProjectileCooldown = Settings.Cooldown[1]
 
 		if entity.Variant == 2 then
-			entity.MaxHitPoints = 280
+			entity.MaxHitPoints = Settings.NewHP
 			entity.HitPoints = entity.MaxHitPoints
 
 		elseif entity.Variant == 12 then
@@ -37,6 +34,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.blightedOvumInit, EntityType.
 function mod:blightedOvumUpdate(entity)
 	local sprite = entity:GetSprite()
 	local target = entity:GetPlayerTarget()
+	local room = Game():GetRoom()
 
 
 	-- Big guy
@@ -71,7 +69,8 @@ function mod:blightedOvumUpdate(entity)
 						if sprite:GetOverlayFrame() == 16 then
 							local params = ProjectileParams()
 							params.BulletFlags = ProjectileFlags.GHOST
-							entity:FireProjectiles(entity.Position, (target.Position - entity.Position):Normalized() * 12, 3, params)
+							entity:FireProjectiles(entity.Position, (target.Position - entity.Position):Normalized() * 10, 3, params)
+							mod:shootEffect(entity, 5, Vector(0, -30), Color(0,0,0, 0.5, 0.5,0.5,0.5))
 							entity:PlaySound(SoundEffect.SOUND_CUTE_GRUNT, 0.9, 0, false, 0.9)
 
 						elseif sprite:GetOverlayFrame() == 31 then
@@ -110,7 +109,7 @@ function mod:blightedOvumUpdate(entity)
 				entity.Pathfinder:MoveRandomly(false)
 			else
 				if entity.Pathfinder:HasPathToPos(target.Position) or entity.State == NpcState.STATE_ATTACK3 then
-					if game:GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false) or entity.State == NpcState.STATE_ATTACK3 then
+					if room:CheckLine(entity.Position, target.Position, 0, 0, false, false) or entity.State == NpcState.STATE_ATTACK3 then
 						entity.Velocity = mod:Lerp(entity.Velocity, (target.Position - entity.Position):Normalized() * speed, 0.25)
 					else
 						entity.Pathfinder:FindGridPath(target.Position, speed / 6, 500, false)
@@ -147,7 +146,7 @@ function mod:blightedOvumUpdate(entity)
 					end
 					
 				-- Chase
-				elseif entity.State == NpcState.STATE_ATTACK or (entity.State == NpcState.STATE_ATTACK3 and game:GetRoom():GetGridCollisionAtPos(entity.Position) == GridCollisionClass.COLLISION_NONE) then
+				elseif entity.State == NpcState.STATE_ATTACK or (entity.State == NpcState.STATE_ATTACK3 and room:GetGridCollisionAtPos(entity.Position) == GridCollisionClass.COLLISION_NONE) then
 					if entity.State == NpcState.STATE_ATTACK3 then
 						entity.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
 						SFXManager():Play(SoundEffect.SOUND_BEAST_GHOST_DASH, 0.75, 0, false, 0.9)
@@ -163,7 +162,7 @@ function mod:blightedOvumUpdate(entity)
 
 
 			-- Transition to 2nd phase
-			if entity.I1 == 0 and entity.HitPoints <= ((entity.MaxHitPoints / 10) * 6) then
+			if entity.I1 == 0 and entity.HitPoints <= (entity.MaxHitPoints / 2) then
 				entity.State = NpcState.STATE_SPECIAL
 				sprite:PlayOverlay("Transition1", true)
 
@@ -189,10 +188,10 @@ function mod:blightedOvumUpdate(entity)
 
 		-- Run away
 		elseif entity.State == NpcState.STATE_IDLE then
-			local vector = game:GetRoom():FindFreePickupSpawnPosition(entity.Position + (Vector.FromAngle((entity.Position - target.Position):GetAngleDegrees() + math.random(-15, 15)) * 120), 40, true, false)
-			
+			local vector = room:FindFreePickupSpawnPosition(entity.Position + (Vector.FromAngle((entity.Position - target.Position):GetAngleDegrees() + math.random(-15, 15)) * 120), 40, true, false)
+
 			if entity.Position:Distance(vector) > 40 and entity:HasEntityFlags(EntityFlag.FLAG_CONFUSION) == false then
-				if game:GetRoom():CheckLine(entity.Position, vector, 0, 0, false, false) then
+				if room:CheckLine(entity.Position, vector, 0, 0, false, false) then
 					entity.Velocity = mod:Lerp(entity.Velocity, (vector - entity.Position):Normalized() * Settings.MoveSpeed, 0.25)
 				else
 					entity.Pathfinder:FindGridPath(vector, Settings.MoveSpeed / 6, 500, false)
@@ -220,11 +219,19 @@ function mod:blightedOvumUpdate(entity)
 		else
 			sprite.Color = Color.Default
 		end
+		
+		
+		-- Die if it has no parent
+		if not entity.Parent then
+			entity.Visible = true
+			entity.State = NpcState.STATE_DEATH
+			sprite:Play("Death", true)
+		end
 
 
 		if entity.State == NpcState.STATE_MOVE or entity.State == NpcState.STATE_ATTACK then
 			-- Haunt parent
-			if entity.Parent and entity.Parent:ToNPC().State == NpcState.STATE_IDLE then
+			if entity.Parent:ToNPC().State == NpcState.STATE_IDLE then
 				entity.State = NpcState.STATE_SPECIAL
 				sprite:Play("Haunt", true)
 			end
@@ -233,9 +240,9 @@ function mod:blightedOvumUpdate(entity)
 			-- Orbit parent
 			entity.StateFrame = entity.StateFrame + 4
 			if entity.StateFrame >= 360 then
-				entity.StateFrame = 0
+				entity.StateFrame = entity.StateFrame - 360
 			end
-			entity.Position = mod:Lerp(entity.Position, entity.Parent.Position + (Vector.FromAngle(entity.StateFrame) * 35), 0.25)
+			entity.Position = mod:Lerp(entity.Position, entity.Parent.Position + (Vector.FromAngle(entity.StateFrame) * 40), 0.25)
 			entity.Velocity = entity.Parent.Velocity
 			
 			-- Face towards the player
@@ -262,6 +269,7 @@ function mod:blightedOvumUpdate(entity)
 					local params = ProjectileParams()
 					params.BulletFlags = ProjectileFlags.GHOST
 					entity:FireProjectiles(entity.Position, (target.Position - entity.Position):Normalized() * 13, 0, params)
+					mod:shootEffect(entity, 5, Vector(0, -20), Color(0,0,0, 0.5, 0.5,0.5,0.5))
 					entity:PlaySound(SoundEffect.SOUND_CUTE_GRUNT, 0.9, 0, false, 0.9)
 				end
 
@@ -298,17 +306,9 @@ function mod:blightedOvumUpdate(entity)
 
 		-- Haunting
 		elseif entity.State == NpcState.STATE_IDLE then
-			if entity.Parent then
-				entity.Position = entity.Parent.Position
-				entity.Velocity = entity.Parent.Velocity
-				entity.Visible = false
-			
-			-- Die outside of body
-			else
-				entity.Visible = true
-				entity.State = NpcState.STATE_DEATH
-				sprite:Play("Death", true)
-			end
+			entity.Position = entity.Parent.Position
+			entity.Velocity = entity.Parent.Velocity
+			entity.Visible = false
 		end
 
 

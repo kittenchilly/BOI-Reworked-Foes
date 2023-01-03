@@ -1,15 +1,16 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
--- Replace gluttony chubber with regular one
 function mod:gluttonyInit(entity)
-	if entity.Variant == 22 then
-		entity.Mass = 0
-		entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK | EntityFlag.FLAG_NO_TARGET | EntityFlag.FLAG_NO_STATUS_EFFECTS)
+	if entity.Variant == 0 and entity.SubType == 1 then
+		entity.SplatColor = Color(0.4,0.8,0.4, 1, 0,0.4,0)
+	
+	-- Replace Gluttony worm with regular one
+	elseif entity.Variant == 22 then
+		entity.Mass = 0.1
+		entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
 		entity:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
-		entity.MaxHitPoints = 0
 		entity:Morph(EntityType.ENTITY_VIS, 22, 0, entity:GetChampionColorIdx())
 	end
 end
@@ -39,35 +40,32 @@ function mod:gluttonyUpdate(entity)
 		if sprite:IsEventTriggered("Shoot") or (entity.SubType == 1 and sprite:GetFrame() == 72) then
 			-- Fat attack
 			if entity.State == NpcState.STATE_ATTACK or entity.State == NpcState.STATE_ATTACK4 then
-				entity:PlaySound(SoundEffect.SOUND_BLOODSHOOT, 1.1, 0, false, 1)
-				local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 2, entity.Position, Vector.Zero, entity):ToEffect()
-				effect:GetSprite().Offset = Vector(0, -12)
-				effect.DepthOffset = entity.DepthOffset + 10
+				local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 4, entity.Position, Vector.Zero, entity):GetSprite()
+				effect.Scale = Vector(entity.Scale * 0.6, entity.Scale * 0.6)
+				effect.Offset = Vector(entity.Scale * 3, entity.Scale * (-18 - (entity.Variant * 4)))
+				effect.Color = entity.SplatColor
 
 
 				if entity.State == NpcState.STATE_ATTACK4 then
-					local params = ProjectileParams()
-
 					-- Super Gluttony
 					if entity.Variant == 1 then
+						local params = ProjectileParams()
 						entity:FireProjectiles(entity.Position, Vector(11, 0), 8, params)
-						params.BulletFlags = ProjectileFlags.ACID_RED
+
+						params.BulletFlags = (ProjectileFlags.ACID_RED | ProjectileFlags.EXPLODE)
 						params.Scale = 1.65
+						params.FallingAccelModifier = 1.25
+						params.FallingSpeedModifier = math.random(-20, -10)
+						
+						for i = 0, 1 do
+							entity:FireProjectiles(entity.Position, Vector.FromAngle(math.random(0, 359)) * 7, 0, params)
+						end
+						entity:PlaySound(SoundEffect.SOUND_BLOODSHOOT, 1.1, 0, false, 1)
 
 					-- Champion Gluttony
 					elseif entity.SubType == 1 then
-						params.BulletFlags = ProjectileFlags.ACID_GREEN
-						params.Color = greenBulletColor
-						params.Scale = 1.5
-						effect.Color = Color(0.4,0.8,0.4, 1, 0,0.4,0)
-					end
-
-					params.FallingAccelModifier = 1.25
-					params.FallingSpeedModifier = math.random(-20, -10)
-					params.BulletFlags = params.BulletFlags + ProjectileFlags.EXPLODE
-
-					for i = 0, 1 do
-						entity:FireProjectiles(entity.Position, Vector.FromAngle(math.random(0, 359)) * 7, 0, params)
+						Isaac.Spawn(EntityType.ENTITY_MAGGOT, 0, 0, entity.Position + Vector(0, 5), Vector.Zero, entity)
+						SFXManager():Play(SoundEffect.SOUND_SUMMONSOUND)
 					end
 				end
 
@@ -79,12 +77,7 @@ function mod:gluttonyUpdate(entity)
 				-- Blood effect
 				if sprite:IsEventTriggered("Shoot") then
 					entity:PlaySound(SoundEffect.SOUND_MEATHEADSHOOT, 1.1, 0, false, 1)
-
-					local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 2, entity.Position, Vector.Zero, entity):ToEffect()
-					effect:GetSprite().Offset = Vector(0, -12)
-					effect.SpriteScale = Vector(0.85, 0.85)
-					effect.DepthOffset = entity.DepthOffset - 10
-					effect.Color = Color(0.4,0.8,0.4, 1, 0,0.4,0)
+					mod:shootEffect(entity, 2, Vector(0, -14), entity.SplatColor, entity.Scale * 0.8, true)
 					
 					for i = -1, 1, 2 do
 						local speed = 20

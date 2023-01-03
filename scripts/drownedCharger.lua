@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -61,8 +60,14 @@ function mod:drownedChargerUpdate(entity)
 						params.HeightModifier = 19
 						params.Variant = ProjectileVariant.PROJECTILE_TEAR
 
-						entity:FireProjectiles(entity.Position + entity.V1:Normalized() * 7, Vector.FromAngle(entity.V1:GetAngleDegrees() + math.random(-30, 30)) * math.random(4, 8), 0, params)
+						entity:FireProjectiles(entity.Position + entity.V1:Normalized() * 8, Vector.FromAngle(entity.V1:GetAngleDegrees() + math.random(-30, 30)) * math.random(4, 8), 0, params)
 						entity:PlaySound(SoundEffect.SOUND_BOSS2_BUBBLES, 0.75, 0, false, 1)
+
+						local behind = false
+						if sprite:IsPlaying("Blow Up") then
+							behind = true
+						end
+						mod:shootEffect(entity, 1, entity.V1:Normalized() * 8, Color(0,0,0, 0.35, 0.4,0.8,1), 0.75, behind)
 					end
 
 				else

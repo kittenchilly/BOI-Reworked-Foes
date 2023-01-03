@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -39,7 +38,7 @@ function mod:eyeUpdate(entity)
 		end
 
 		-- Telegraphs
-		if (entity.Variant == 0 and sprite:GetFrame() == 1) or (entity.Variant == 1 and sprite:GetOverlayFrame() == 1) then
+		if IRFconfig.laserEyes == true and ((entity.Variant == 0 and sprite:GetFrame() == 1) or (entity.Variant == 1 and sprite:GetOverlayFrame() == 1)) then
 			local pitch = 1.1
 			local offset = 16
 			local xScale = 1
@@ -62,7 +61,3 @@ function mod:eyeUpdate(entity)
 	end
 end
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mod.eyeUpdate, EntityType.ENTITY_EYE)
-
-
---entity.V2 = entity.V2 + Vector(5, 0)
---entity.V1 = entity.V2

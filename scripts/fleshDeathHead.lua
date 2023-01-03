@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	Range = 100,
@@ -22,8 +21,23 @@ function fleshDeathHeadHeal(entity, big)
 		sound = SoundEffect.SOUND_VAMP_DOUBLE
 	end
 
+
+	for _,v in pairs(Isaac.GetRoomEntities()) do
+		if v.Type > 9 and v.Type < 1000 and entity.Position:Distance(v.Position) <= Settings.Range and v.Type ~= EntityType.ENTITY_FLESH_DEATHS_HEAD and v.HitPoints < v.MaxHitPoints
+		and v.EntityCollisionClass ~= EntityCollisionClass.ENTCOLL_NONE and v:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) == entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) then
+			v:AddHealth(Settings.HealAmount * multiplier)
+			SFXManager():Play(sound)
+			v:SetColor(Color(1,1,1, 1, 0.65,0,0), 15, 1, true, false)
+			
+			local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.HEART, 0, v.Position, Vector.Zero, entity)
+			effect:ToEffect():FollowParent(v)
+			effect:GetSprite().Offset = Vector(0, -40)
+			effect.DepthOffset = v.DepthOffset + 1
+		end
+	end
+
 	if entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) then
-		for i = 0, game:GetNumPlayers() do
+		for i = 0, Game():GetNumPlayers() do
 			local player = Isaac.GetPlayer(i)
 			
 			if entity.Position:Distance(player.Position) <= Settings.Range and not player:HasFullHearts() then
@@ -35,21 +49,6 @@ function fleshDeathHeadHeal(entity, big)
 				effect:ToEffect():FollowParent(player)
 				effect:GetSprite().Offset = Vector(0, -40)
 				effect.DepthOffset = player.DepthOffset + 1
-			end
-		end
-
-	else
-		for _,v in pairs(Isaac.GetRoomEntities()) do
-			if v.Type > 9 and v.Type < 1000 and entity.Position:Distance(v.Position) <= Settings.Range and v.Type ~= EntityType.ENTITY_FLESH_DEATHS_HEAD
-			and v.HitPoints < v.MaxHitPoints and v.EntityCollisionClass ~= EntityCollisionClass.ENTCOLL_NONE then
-				v:AddHealth(Settings.HealAmount * multiplier)
-				SFXManager():Play(sound)
-				v:SetColor(Color(1,1,1, 1, 0.65,0,0), 15, 1, true, false)
-				
-				local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.HEART, 0, v.Position, Vector.Zero, entity)
-				effect:ToEffect():FollowParent(v)
-				effect:GetSprite().Offset = Vector(0, -40)
-				effect.DepthOffset = v.DepthOffset + 1
 			end
 		end
 	end
@@ -69,7 +68,8 @@ function mod:fleshDeathHeadUpdate(entity)
 
 	-- Healing aura
 	if not data.aura or (data.aura and not data.aura:Exists()) then
-		data.aura = Isaac.Spawn(EntityType.ENTITY_EFFECT, 868, 0, entity.Position, Vector.Zero, entity):ToEffect()
+		data.aura = Isaac.Spawn(EntityType.ENTITY_EFFECT, IRFentities.healingAura, 0, entity.Position, Vector.Zero, entity):ToEffect()
+		data.aura:FollowParent(entity)
 		data.aura.Parent = entity
 		data.aura:GetSprite():Play("FadeIn", true)
 		data.aura.DepthOffset = -1000
@@ -111,26 +111,25 @@ mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, mod.fleshDeathHeadDeath, EntityT
 
 -- Healing aura
 function mod:healingAuraUpdate(effect)
-	if effect.Parent ~= nil then
-		local sprite = effect:GetSprite()
+	local sprite = effect:GetSprite()
 
-		effect:FollowParent(effect.Parent)
-
-		if sprite:IsPlaying("FadeIn") and sprite:GetFrame() == 11 then
-			sprite:Play("Idle", true)
+	if effect.State == 0 then
+		if sprite:IsFinished("FadeIn") then
+			effect.State = 1
 		end
 
-		if effect.Parent:HasMortalDamage() then
-			if not sprite:IsPlaying("FadeOut") then
-				sprite:Play("FadeOut", true)
-			end
-			if sprite:GetFrame() == 9 then
-				effect:Remove()
-			end
+	elseif effect.State == 1 then
+		mod:LoopingAnim(sprite, "Idle")
+
+		if not effect.Parent or effect.Parent:HasMortalDamage() then
+			effect.State = 2
+			sprite:Play("FadeOut", true)
 		end
 
-	else
-		effect:Remove()
+	elseif effect.State == 2 then
+		if sprite:IsFinished("FadeOut") then
+			effect:Remove()
+		end
 	end
 end
-mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, mod.healingAuraUpdate, 868)
+mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, mod.healingAuraUpdate, IRFentities.healingAura)

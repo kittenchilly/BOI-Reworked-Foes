@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	SideRange = 25,
@@ -9,6 +8,13 @@ local Settings = {
 }
 
 
+
+function mod:nerveEnding2Init(entity)
+	if entity.Variant == 1 then
+		entity.ProjectileCooldown = 20
+	end
+end
+mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.nerveEnding2Init, EntityType.ENTITY_NERVE_ENDING)
 
 function mod:nerveEnding2Update(entity)
 	if entity.Variant == 1 then
@@ -25,7 +31,7 @@ function mod:nerveEnding2Update(entity)
 			
 			if entity.ProjectileCooldown <= 0 then
 				-- Attack if in range
-				if game:GetRoom():CheckLine(entity.Position, target.Position, 3, 0, false, false) then
+				if Game():GetRoom():CheckLine(entity.Position, target.Position, 3, 0, false, false) then
 					-- Horizontal
 					if entity.Position.Y <= target.Position.Y + Settings.SideRange and entity.Position.Y >= target.Position.Y - Settings.SideRange then
 						if target.Position.X > (entity.Position.X - Settings.FrontRange) and target.Position.X < entity.Position.X then
@@ -68,7 +74,7 @@ function mod:nerveEnding2Update(entity)
 				local hurt = false
 
 				-- Check if it hit the target
-				if game:GetRoom():CheckLine(entity.Position, target.Position, 3 - entity.Variant, 0, false, false) then
+				if Game():GetRoom():CheckLine(entity.Position, target.Position, 3 - entity.Variant, 0, false, false) then
 					if data.swingDir == "Left" or data.swingDir == "Right" then
 						if entity.Position.Y <= target.Position.Y + Settings.SideRange and entity.Position.Y >= target.Position.Y - Settings.SideRange then
 							if data.swingDir == "Left" and target.Position.X > (entity.Position.X - Settings.FrontRange) and target.Position.X < entity.Position.X

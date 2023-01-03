@@ -1,5 +1,6 @@
 local mod = BetterMonsters
-local game = Game()
+
+
 
 function mod:megaMawUpdate(entity)
 	if entity.SubType == 1 then

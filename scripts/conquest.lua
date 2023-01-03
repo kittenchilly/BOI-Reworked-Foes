@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	MoveSpeed = 6,
@@ -23,7 +22,7 @@ function mod:conquestUpdate(entity)
 		local sprite = entity:GetSprite()
 
 		-- Go to 2nd phase
-		if not entity.SpawnerEntity and entity.HitPoints <= entity.MaxHitPoints / 2 and entity.State ~= NpcState.STATE_ATTACK2 and game:GetRoom():GetBossID() ~= 70 then
+		if not entity.SpawnerEntity and entity.HitPoints <= entity.MaxHitPoints / 2 and entity.State ~= NpcState.STATE_ATTACK2 and Game():GetRoom():GetBossID() ~= 70 then
 			-- Conquest without horse
 			local conquest = Isaac.Spawn(EntityType.ENTITY_WAR, 11, entity.SubType, entity.Position, Vector.Zero, entity):ToNPC()
 			conquest.State = NpcState.STATE_APPEAR_CUSTOM
@@ -48,12 +47,12 @@ function mod:conquestUpdate(entity)
 			-- Set up champions properly
 			if entity.SubType == 1 then
 				for i = 0, conquestSprite:GetLayerCount() do
-					conquestSprite:ReplaceSpritesheet(i, "gfx/bosses/better/boss_066_conquest 2_red.png")
+					conquestSprite:ReplaceSpritesheet(i, "gfx/bosses/classic/boss_066_conquest 2_red.png")
 				end
 				conquestSprite:LoadGraphics()
 				conquest.Scale = 1.15
 
-				horseSprite:ReplaceSpritesheet(0, "gfx/bosses/better/boss_066_conquest 2_red.png")
+				horseSprite:ReplaceSpritesheet(0, "gfx/bosses/classic/boss_066_conquest 2_red.png")
 				horseSprite:LoadGraphics()
 				horse.Scale = 1.15
 			end
@@ -85,7 +84,7 @@ function mod:conquestUpdate(entity)
 					entity:PlaySound(SoundEffect.SOUND_MONSTER_GRUNT_4, 1, 0, false, 1)
 
 					local params = ProjectileParams()
-					params.Scale = 1.435
+					params.Scale = 1.45
 					params.FallingAccelModifier = 1.25
 					params.FallingSpeedModifier = math.random(-20, -10)
 					params.BulletFlags = ProjectileFlags.EXPLODE
@@ -146,7 +145,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_NPC_COLLISION, mod.conquestCollide, EntityTy
 -- Red champion globins
 function mod:conquestLightBeamUpdate(effect)
 	if effect.SpawnerEntity and effect.SpawnerType == EntityType.ENTITY_WAR and effect.SpawnerEntity.SubType == 1 then
-		if Isaac.CountEntities(effect.SpawnerEntity, EntityType.ENTITY_GLOBIN, -1, -1) < Settings.MaxGlobins and effect.Position:Distance(game:GetNearestPlayer(effect.Position).Position) >= 80 then
+		if Isaac.CountEntities(effect.SpawnerEntity, EntityType.ENTITY_GLOBIN, -1, -1) < Settings.MaxGlobins and effect.Position:Distance(Game():GetNearestPlayer(effect.Position).Position) >= 80 then
 			Isaac.Spawn(EntityType.ENTITY_GLOBIN, 0, 0, effect.Position, Vector.Zero, effect.SpawnerEntity)
 			SFXManager():Play(SoundEffect.SOUND_SUMMONSOUND, 0.75)
 		end
@@ -162,6 +161,7 @@ function mod:conquestPreUpdate(entity)
 	if entity.Variant == 11 or entity.Variant == 20 then
 		local sprite = entity:GetSprite()
 		local target = entity:GetPlayerTarget()
+		local room = Game():GetRoom()
 
 
 		-- Conquest without horse
@@ -207,48 +207,34 @@ function mod:conquestPreUpdate(entity)
 
 				if sprite:IsEventTriggered("Shoot") then
 					entity:PlaySound(SoundEffect.SOUND_MONSTER_ROAR_0, 0.9, 0, false, 1)
+					local params = ProjectileParams()
 
-					-- Lasers
 					if entity.SubType == 0 then
-						for i = 0, 3 do
-							local laser_ent_pair = {laser = EntityLaser.ShootAngle(5, entity.Position, i * 90, 15, Vector(0, -30), entity), entity}
-							local laser = laser_ent_pair.laser
-							laser.DepthOffset = entity.DepthOffset - 10
-							laser.Mass = 0
-						end
-					
-					-- Projectiles
-					elseif entity.SubType == 1 then
-						entity.I2 = 1
-						entity.ProjectileDelay = 0
-						entity.StateFrame = 0
-						SFXManager():Play(SoundEffect.SOUND_BLOOD_LASER, 0.9, 0, false, 1)
-					end
+						params.BulletFlags = ProjectileFlags.SMART
+						params.Scale = 1.5
+						entity:FireProjectiles(entity.Position, Vector(11, 6), 9, params)
 
-				elseif sprite:IsEventTriggered("Flap") then
-					entity.I2 = 0
+					-- Red champion
+					elseif entity.SubType == 1 then
+						params.Scale = 1.45
+						params.FallingAccelModifier = 1.25
+						params.FallingSpeedModifier = math.random(-20, -10)
+						params.BulletFlags = ProjectileFlags.EXPLODE
+
+						for i = 0, 1 do
+							entity:FireProjectiles(entity.Position, Vector.FromAngle(math.random(0, 359)) * 7, 0, params)
+						end
+						
+						local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 2, entity.Position, Vector.Zero, entity):ToEffect()
+						effect:GetSprite().Offset = Vector(0, -44)
+						effect.DepthOffset = entity.DepthOffset + 10
+						effect.SpriteScale = Vector(1.25, 1.25)
+					end
 				end
 
 				if sprite:IsFinished("Attack") then
 					entity.State = NpcState.STATE_MOVE
 					entity.ProjectileCooldown = math.random(Settings.Cooldown[1], Settings.Cooldown[2])
-				end
-
-
-				-- Red champion projetiles
-				if entity.I2 == 1 then
-					if entity.ProjectileDelay <= 0 then
-						entity.ProjectileDelay = Settings.ShotDelay
-						entity.StateFrame = entity.StateFrame + 1
-
-						local params = ProjectileParams()
-						params.CircleAngle = entity.StateFrame * 225
-						params.FallingSpeedModifier = -1
-						entity:FireProjectiles(entity.Position, Vector(Settings.ShotSpeed, 8), 9, params)
-
-					else
-						entity.ProjectileDelay = entity.ProjectileDelay - 1
-					end
 				end
 			end
 
@@ -275,7 +261,7 @@ function mod:conquestPreUpdate(entity)
 			-- Dash
 			elseif entity.State == NpcState.STATE_MOVE then
 				if sprite:IsEventTriggered("Dash") then
-					entity:PlaySound(SoundEffect.SOUND_MONSTER_YELL_A, 0.75, 0, false, 1)
+					entity:PlaySound(SoundEffect.SOUND_MONSTER_YELL_A, 0.9, 0, false, 1)
 					entity.I1 = 1
 					entity.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS_Y
 					entity:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK)
@@ -293,11 +279,22 @@ function mod:conquestPreUpdate(entity)
 					entity.Velocity = mod:StopLerp(entity.Velocity)
 
 				elseif entity.I1 == 1 then
-					entity.Velocity = entity.V1 * Settings.DashSpeed
+					entity.Velocity = entity.V1 * (Settings.DashSpeed - entity.SubType)
 					mod:LoopingAnim(sprite, "Dash")
 
+					-- Red champion bullets
+					if entity.SubType == 1 then
+						if room:IsPositionInRoom(entity.Position, 0) == true and entity:IsFrame(2, 0) then
+							entity.ProjectileDelay = room:GetGridIndex(entity.Position)
+
+							local params = ProjectileParams()
+							params.Scale = 1.4
+							params.FallingSpeedModifier = 1
+							entity:FireProjectiles(entity.Position, Vector.Zero, 0, params)
+						end
+					end
+
 					-- Turn around
-					local room = game:GetRoom()
 					if (sprite.FlipX == false and entity.Position.X > room:GetBottomRightPos().X + 200) or (sprite.FlipX == true and entity.Position.X < room:GetTopLeftPos().X - 200) then
 						entity.State = NpcState.STATE_IDLE
 						entity.Position = Vector(entity.Position.X, target.Position.Y)

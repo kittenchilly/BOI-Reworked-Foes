@@ -1,44 +1,47 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
 function mod:blackBonyInit(entity)
 	-- Get random bomb type
 	if entity.SubType == 0 then
-		local canBrim = 5
-		-- There can only be one brimstone Boney per room
-		if Isaac.CountEntities(nil, EntityType.ENTITY_BLACK_BONY, -1, 6) == 0 then
-			canBrim = 6
+		if Isaac.CountEntities(nil, EntityType.ENTITY_BLACK_BONY, -1, 6) == 0 and math.random(1, 100) <= 10 then
+			entity.SubType = 6
+		else
+			entity.SubType = math.random(1, 5)
 		end
-
-		entity.SubType = math.random(1, canBrim)
 	end
 end
 mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.blackBonyInit, EntityType.ENTITY_BLACK_BONY)
 
 function mod:blackBonyUpdate(entity)
 	local sprite = entity:GetSprite()
+	
+	if entity.FrameCount <= 1 then
+		if entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) then
+			entity.SubType = 0
+		end
+		
+		-- Bomb costume
+		if entity.SubType > 0 then
+			local suffix = ""
+			if entity:IsChampion() then
+				suffix = "_champion"
+			end
+			-- No spark for cross and brimstone variants
+			if entity.SubType == 1 or entity.SubType == 6 then
+				sprite:ReplaceSpritesheet(2, "")
+			end
+
+			sprite:ReplaceSpritesheet(1, "gfx/monsters/better/black boney/277.000_blackboney head_" .. entity.SubType .. suffix .. ".png")
+			sprite:LoadGraphics()
+		end
+	end
+
 
 	-- Only attack once
 	if entity.State == NpcState.STATE_ATTACK then
 		entity.StateFrame = 2
-	end
-
-
-	-- Bomb costume
-	if entity.SubType > 0 and entity.FrameCount <= 1 then
-		local suffix = ""
-		if entity:IsChampion() then
-			suffix = "_champion"
-		end
-		-- No spark for cross and brimstone variants
-		if entity.SubType == 1 or entity.SubType == 6 then
-			sprite:ReplaceSpritesheet(2, "")
-		end
-
-		sprite:ReplaceSpritesheet(1, "gfx/monsters/better/black boney/277.000_blackboney head_" .. entity.SubType .. suffix .. ".png")
-		sprite:LoadGraphics()
 	end
 
 
