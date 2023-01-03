@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	HideTime = 120,
@@ -54,6 +53,7 @@ function mod:codWormUpdate(entity)
 		if sprite:IsEventTriggered("Shoot") then
 			entity:PlaySound(SoundEffect.SOUND_WORM_SPIT, 1.2, 0, false, 1)
 			entity:FireProjectiles(entity.Position, (target.Position - entity.Position):Normalized() * (Settings.ShotSpeed - (entity.I2 * 2)), 3 + (entity.I2 * 2), ProjectileParams())
+			mod:shootEffect(entity, 5, Vector(1, -22), Color(1,1,1, 0.7), 0.8)
 		end
 
 		if sprite:IsFinished("Attack") then
@@ -97,7 +97,7 @@ end
 mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, mod.codWormUpdate, EntityType.ENTITY_COD_WORM)
 
 function mod:codWormDMG(target, damageAmount, damageFlags, damageSource, damageCountdownFrames)
-	if target:ToNPC().State == NpcState.STATE_IDLE then
+	if target:ToNPC().State == NpcState.STATE_IDLE and target.FrameCount > 20 then
 		target:ToNPC().State = NpcState.STATE_JUMP
 		target:ToNPC():GetSprite():Play("DigOut", true)
 		target:ToNPC().I2 = 1

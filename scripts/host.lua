@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -66,11 +65,12 @@ function mod:hostUpdate(entity)
 		
 		if entity.Type == EntityType.ENTITY_HOST and entity.State == NpcState.STATE_ATTACK and sprite:IsEventTriggered("Close") then
 			entity:FireProjectiles(entity.Position, Vector(11, 0), 8, ProjectileParams())
+			Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 3, entity.Position, Vector.Zero, entity).SpriteScale = Vector(entity.Scale * 0.6, entity.Scale * 0.6)
 		end
 
 
-	elseif IRFconfig.breakableHosts == true and entity.Type == EntityType.ENTITY_HOST or entity.Type == EntityType.ENTITY_MOBILE_HOST or entity.Type == EntityType.ENTITY_FLOATING_HOST then
-		if (entity.Variant == 0 or (entity.Variant == 3 and entity.SubType ~= 40)) then
+	elseif IRFconfig.breakableHosts == true and (entity.Type == EntityType.ENTITY_HOST or entity.Type == EntityType.ENTITY_MOBILE_HOST or entity.Type == EntityType.ENTITY_FLOATING_HOST) then
+		if entity.Variant == 0 or (entity.Variant == 3 and entity.SubType ~= 40) then
 			if sprite:IsPlaying("Bombed") or sprite:IsOverlayPlaying("Bombed") then
 				hostBreak(entity)
 			end
@@ -84,8 +84,8 @@ function mod:hostDMG(target, damageAmount, damageFlags, damageSource, damageCoun
 		hostFakeDMG(target, damageAmount)
 		return false
 
-	elseif IRFconfig.breakableHosts == true and target.Type == EntityType.ENTITY_HOST or target.Type == EntityType.ENTITY_MOBILE_HOST or target.Type == EntityType.ENTITY_FLOATING_HOST then
-		if damageAmount >= target.MaxHitPoints * 1.25 and target:ToNPC().State == 3 then
+	elseif IRFconfig.breakableHosts == true and (target.Type == EntityType.ENTITY_HOST or target.Type == EntityType.ENTITY_MOBILE_HOST or target.Type == EntityType.ENTITY_FLOATING_HOST) then
+		if damageAmount >= target.MaxHitPoints and target:ToNPC().State == NpcState.STATE_IDLE then
 			if target.Type == EntityType.ENTITY_MOBILE_HOST then
 				target:GetSprite():PlayOverlay("Bombed", true)
 			else

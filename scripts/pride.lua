@@ -1,12 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
-
-prideBulletColor = Color(0.6,0.6,0.6, 1, 0.31,0.31,0.31)
-prideBulletColor:SetColorize(1, 1, 1, 1)
-
---superPrideBulletColor = Color(0.14,0.31,0.28, 1, 0.75,0.2,0.63) -- for original sprite
-superPrideBulletColor = Color(0.6,0.6,0.6, 1, 0.75,0.31,0.46)
-superPrideBulletColor:SetColorize(1, 1, 1, 1)
 
 
 
@@ -25,7 +17,6 @@ function mod:prideUpdate(entity)
 			if sprite:IsEventTriggered("Shoot") then
 				if entity.SubType == 0 then
 					SFXManager():Play(SoundEffect.SOUND_BOSS_LITE_HISS, 1, 0, false, 1)
-					--SFXManager():Play(SoundEffect.SOUND_BLOOD_LASER_SMALL, 1.1, 0, false, 1) -- For flash brimstone sound
 
 				elseif entity.SubType == 1 then
 					entity.I2 = 1
@@ -65,7 +56,7 @@ function mod:prideUpdate(entity)
 			entity.Velocity = mod:StopLerp(entity.Velocity)
 
 			if sprite:IsEventTriggered("Beam") then
-				local room = game:GetRoom()
+				local room = Game():GetRoom()
 				local vector = room:GetGridPosition(room:GetGridIndex(room:FindFreeTilePosition(Isaac.GetRandomPosition(), 80)))
 				Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.CRACK_THE_SKY, 2, vector, Vector.Zero, entity):GetSprite().Color = sunBeamColor
 			
@@ -82,9 +73,14 @@ function mod:prideUpdate(entity)
 		-- Better blood color
 		if entity:HasMortalDamage() then
 			if entity.Variant == 0 then
-				entity.SplatColor = prideBulletColor
+				if entity.SubType == 1 then
+					entity.SplatColor = Color(0,0,0, 1, 0.75,0.66,0.31)
+				else
+					entity.SplatColor = Color(0,0,0, 1, 0.31,0.31,0.31)
+				end
+
 			elseif entity.Variant == 1 then
-				entity.SplatColor = superPrideBulletColor
+				entity.SplatColor = Color(0,0,0, 1, 0.75,0.31,0.46)
 			end
 		end
 	end

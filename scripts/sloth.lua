@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	SuperSlothShots = 2,
@@ -68,7 +67,7 @@ function mod:slothUpdate(entity)
 					if entity.SubType == 0 then
 						params.FallingAccelModifier = 1.25
 						params.FallingSpeedModifier = -20
-						params.BulletFlags = (ProjectileFlags.EXPLODE | ProjectileFlags.ACID_GREEN)
+						params.BulletFlags = ProjectileFlags.EXPLODE
 						params.Color = greenBulletColor
 						params.Scale = 1.5
 						entity:FireProjectiles(entity.Position, vector:Normalized() * Settings.ShotSpeed, 0, params)
@@ -85,7 +84,7 @@ function mod:slothUpdate(entity)
 
 
 			-- Super Sloth shoots 2 times
-			if sprite:IsFinished("Attack") or (entity.Variant == 1 and sprite:GetFrame() == 16 and entity.I2 < Settings.SuperSlothShots - 1 and entity.State == NpcState.STATE_ATTACK4) then
+			if sprite:IsFinished("Attack") or (entity.Variant == 1 and sprite:GetFrame() == 18 and entity.I2 < Settings.SuperSlothShots - 1 and entity.State == NpcState.STATE_ATTACK4) then
 				entity.I2 = entity.I2 + 1
 
 				if entity.Variant == 0 or entity.State == NpcState.STATE_ATTACK3 or entity.I2 >= Settings.SuperSlothShots then
@@ -101,6 +100,11 @@ function mod:slothUpdate(entity)
 					end
 				end
 			end
+		end
+
+
+		if entity.SubType == 1 and entity:HasMortalDamage() then
+			entity.SplatColor = skyBulletColor
 		end
 	end
 end

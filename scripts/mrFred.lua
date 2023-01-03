@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -17,7 +16,7 @@ function mod:mrFredUpdate(entity)
 	if entity.Variant == 0 and entity.SubType == 0 then
 		local sprite = entity:GetSprite()
 		local target = entity:GetPlayerTarget()
-		local room = game:GetRoom()
+		local room = Game():GetRoom()
 
 
 		if entity.StateFrame == 1 then

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -14,7 +13,7 @@ function mod:stevenUpdate(entity)
 	if entity.Variant == 1 or entity.Variant == 11 then
 		local sprite = entity:GetSprite()
 		local data = entity:GetData()
-		local room = game:GetRoom()
+		local room = Game():GetRoom()
 
 		-- Child logic
 		if entity.Child then
@@ -32,7 +31,8 @@ function mod:stevenUpdate(entity)
 
 		-- Teleport
 		local function stevenTeleport()
-			entity.Position = Vector(room:GetBottomRightPos().X + (room:GetTopLeftPos().X - entity.Position.X), room:GetBottomRightPos().Y + (room:GetTopLeftPos().Y - entity.Position.Y))
+			local pos = Vector(room:GetBottomRightPos().X + (room:GetTopLeftPos().X - entity.Position.X), room:GetBottomRightPos().Y + (room:GetTopLeftPos().Y - entity.Position.Y))
+			entity.Position = room:FindFreePickupSpawnPosition(pos, 0, true, false)
 			entity:SetColor(Color(1,1,1, 1, 1,1,1), 5, 1, true, false)
 
 			SFXManager():Play(SoundEffect.SOUND_STATIC)
@@ -40,7 +40,8 @@ function mod:stevenUpdate(entity)
 			mod:QuickCreep(EffectVariant.CREEP_STATIC, entity, entity.Position, 1.5)
 
 			if data.child then
-				data.child.Position = Vector(room:GetBottomRightPos().X + (room:GetTopLeftPos().X - data.child.Position.X), room:GetBottomRightPos().Y + (room:GetTopLeftPos().Y - data.child.Position.Y))
+				local childPos = Vector(room:GetBottomRightPos().X + (room:GetTopLeftPos().X - data.child.Position.X), room:GetBottomRightPos().Y + (room:GetTopLeftPos().Y - data.child.Position.Y))
+				data.child.Position = room:FindFreePickupSpawnPosition(childPos, 0, true, true)
 				data.child:SetColor(Color(1,1,1, 1, 1,1,1), 5, 1, true, false)
 				Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BIG_SPLASH, 2, data.child.Position, Vector.Zero, data.child).DepthOffset = data.child.DepthOffset + 10
 				
@@ -58,7 +59,12 @@ function mod:stevenUpdate(entity)
 			if data.timer <= 0 then
 				stevenTeleport()
 				data.timer = 240
+
 			else
+				if data.timer <= 30 then
+					local num = (30 - data.timer) * 0.02
+					entity:SetColor(Color(1,1,1, 1, num,num,num), 5, 1, true, false)
+				end
 				data.timer = data.timer - 1
 			end
 		end

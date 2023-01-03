@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local blueMomSpawns = {
 	{EntityType.ENTITY_POOTER, 1},
@@ -13,7 +12,7 @@ local blueMomSpawns = {
 	{EntityType.ENTITY_WALKINGBOIL, 1},
 	{EntityType.ENTITY_WALKINGBOIL, 2},
 	{EntityType.ENTITY_BUTTLICKER, 0},
-	{EntityType.ENTITY_BIGSPIDER, 0}
+	{EntityType.ENTITY_BIGSPIDER, 0},
 }
 
 local mausoleumMomSpawns = {
@@ -26,7 +25,7 @@ local mausoleumMomSpawns = {
 	{EntityType.ENTITY_CANDLER, 0},
 	{EntityType.ENTITY_WHIPPER, 0},
 	{EntityType.ENTITY_PON, 0},
-	{EntityType.ENTITY_VIS_FATTY, 1}
+	{EntityType.ENTITY_VIS_FATTY, 1},
 }
 
 local gehennaMomSpawns = {
@@ -39,7 +38,7 @@ local gehennaMomSpawns = {
 	{EntityType.ENTITY_WHIPPER, 1},
 	{EntityType.ENTITY_VIS_FATTY, 1},
 	{EntityType.ENTITY_MAZE_ROAMER, 0},
-	{EntityType.ENTITY_GOAT, 0}
+	{EntityType.ENTITY_GOAT, 0},
 }
 
 
@@ -87,7 +86,7 @@ function mod:newMomSpawns(entity)
 			spawn = blueMomSpawns[math.random(1, #blueMomSpawns)]
 
 		elseif entity.SpawnerEntity.SubType == 3 then
-			if game:GetLevel():GetStageType() == StageType.STAGETYPE_REPENTANCE_B then
+			if Game():GetLevel():GetStageType() == StageType.STAGETYPE_REPENTANCE_B then
 				spawn = gehennaMomSpawns[math.random(1, #gehennaMomSpawns)]
 			else
 				spawn = mausoleumMomSpawns[math.random(1, #mausoleumMomSpawns)]

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -18,9 +17,9 @@ function mod:megaClottyUpdate(entity)
 		elseif sprite:IsEventTriggered("Shoot3") then
 			mode = 8
 		end
+		entity:FireProjectiles(entity.Position, Vector(10, 0), mode, ProjectileParams())
 
-		Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 3, entity.Position, Vector.Zero, entity).SpriteScale = Vector(0.75, 0.75)
-		entity:FireProjectiles(entity.Position, Vector(11, 0), mode, ProjectileParams())
+		Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 3, entity.Position, Vector.Zero, entity).SpriteScale = Vector(entity.Scale * 0.75, entity.Scale * 0.75)
 		SFXManager():Play(SoundEffect.SOUND_FORESTBOSS_STOMPS, 0.75)
 	end
 end

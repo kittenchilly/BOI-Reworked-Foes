@@ -1,38 +1,15 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
 -- Mom's Hand --
-function mod:momsHandInit(entity)
-	if IRFconfig.hiddenAppearAnims == true then
-		entity:GetSprite():Play("JumpUp", true)
-		entity:GetData().init = false
-		entity.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
-	end
-
-	entity:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
-end
-mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.momsHandInit, EntityType.ENTITY_MOMS_HAND)
-
-function mod:momsHandPreUpdate(entity)
-	if entity:GetData().init == false then
-		if entity:GetSprite():IsFinished("JumpUp") then
-			entity:GetData().init = true
-		end
-
-		return true
-	end
-end
-mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, mod.momsHandPreUpdate, EntityType.ENTITY_MOMS_HAND)
-
 function mod:momsHandUpdate(entity)
 	-- Go to previous room if Isaac is grabbed
 	if entity.State == NpcState.STATE_SPECIAL and entity.I1 == 1 then
 		if entity.StateFrame == 1 then
 			entity:PlaySound(SoundEffect.SOUND_MOM_VOX_EVILLAUGH, 1, 0, false, 1)
 		elseif entity.StateFrame == 25 then
-			game:StartRoomTransition(game:GetLevel():GetPreviousRoomIndex(), -1, RoomTransitionAnim.FADE, nil, -1)
+			Game():StartRoomTransition(Game():GetLevel():GetPreviousRoomIndex(), -1, RoomTransitionAnim.FADE, nil, -1)
 		end
 	end
 end
@@ -41,29 +18,6 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mod.momsHandUpdate, EntityType.ENTIT
 
 
 -- Mom's Dead Hand --
-function mod:momsDeadHandInit(entity)
-	if IRFconfig.hiddenAppearAnims == true then
-		entity:GetSprite():Play("JumpUp", true)
-		entity:GetData().init = false
-		entity.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
-	end
-
-	entity:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
-	entity.SplatColor = Color(0.25,0.25,0.25, 1)
-end
-mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.momsDeadHandInit, EntityType.ENTITY_MOMS_DEAD_HAND)
-
-function mod:momsDeadHandPreUpdate(entity)
-	if entity:GetData().init == false then
-		if entity:GetSprite():IsFinished("JumpUp") then
-			entity:GetData().init = true
-		end
-
-		return true
-	end
-end
-mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, mod.momsDeadHandPreUpdate, EntityType.ENTITY_MOMS_DEAD_HAND)
-
 function mod:momsDeadHandUpdate(entity)
 	local sprite = entity:GetSprite()
 
@@ -77,17 +31,18 @@ function mod:momsDeadHandUpdate(entity)
 
 
 		local params = ProjectileParams()
-		local bg = game:GetRoom():GetBackdropType()
+		params.Scale = 1.35
 
+		local bg = Game():GetRoom():GetBackdropType()
 		if bg == BackdropType.CORPSE or bg == BackdropType.CORPSE2 then
 			params.Color = corpseGreenBulletColor
 		elseif not (bg == BackdropType.WOMB or bg == BackdropType.UTERO or bg == BackdropType.SCARRED_WOMB or bg == BackdropType.CORPSE3) then
 			params.Variant = ProjectileVariant.PROJECTILE_ROCK
 		end
-		params.Scale = 1.35
 
 		entity:FireProjectiles(entity.Position, Vector(11, 8), 8, params)
 		Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.SHOCKWAVE, 0, entity.Position, Vector.Zero, entity):ToEffect().Timeout = 10
+		Game():MakeShockwave(entity.Position, 0.035, 0.025, 10)
 	end
 end
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mod.momsDeadHandUpdate, EntityType.ENTITY_MOMS_DEAD_HAND)

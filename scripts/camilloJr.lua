@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -37,16 +36,14 @@ function mod:camilloJrUpdate(entity)
 		if sprite:IsEventTriggered("Worm") then
 			entity.I1 = 1
 			entity:PlaySound(SoundEffect.SOUND_MEATHEADSHOOT, 1.2, 0, false, 1)
+			mod:shootEffect(entity, 2, Vector(0, -14), nil, 1, true)
+
 			local worm = Isaac.Spawn(EntityType.ENTITY_VIS, 22, 230, entity.Position, (target.Position - entity.Position):Normalized() * 20, entity)
 			worm.Parent = entity
 			worm.DepthOffset = entity.DepthOffset + 400
 
 			if not (entity:HasEntityFlags(EntityFlag.FLAG_CHARM) or entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY)) then
-				local cord = Isaac.Spawn(EntityType.ENTITY_EVIS, 10, 230, entity.Position, Vector.Zero, entity):ToNPC()
-				cord.Parent = entity
-				cord.Target = worm
-				cord.DepthOffset = worm.DepthOffset - 100
-				entity.Child = cord
+				mod:QuickCord(entity, worm, "230.000_camillojr")
 			end
 
 		elseif sprite:IsEventTriggered("Sound") then
@@ -56,7 +53,7 @@ function mod:camilloJrUpdate(entity)
 				entity.Child:Remove()
 				entity.Child = nil
 			end
-		
+
 		elseif sprite:IsEventTriggered("Stop") then
 			entity.State = NpcState.STATE_MOVE
 			entity.ProjectileCooldown = 30

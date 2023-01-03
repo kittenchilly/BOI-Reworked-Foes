@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	PopTime = 180,
@@ -61,7 +60,7 @@ function mod:drownedHiveUpdate(entity)
 
 
 		if entity.State == NpcState.STATE_ATTACK then
-			if sprite:GetOverlayFrame() == 4 or sprite:GetOverlayFrame() == 5 then -- Fuck you Bassya for changing their animation timing (JK your mod is great)
+			if sprite:GetOverlayFrame() == 4 or sprite:GetOverlayFrame() == 5 then
 				-- Remove drowned chargers
 				for i, maggot in pairs(Isaac.FindByType(EntityType.ENTITY_CHARGER, 1, -1, false, false)) do
 					if maggot.SpawnerType == EntityType.ENTITY_HIVE then

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	MoveSpeed = 2,
@@ -65,7 +64,7 @@ function mod:skinnyUpdate(entity)
 						skull:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
 						skull:ToNPC().Scale = entity.Scale
 
-						if game:IsGreedMode() then
+						if Game():IsGreedMode() then
 							entity.Child = skull
 						end
 					end
@@ -83,7 +82,7 @@ function mod:skinnyUpdate(entity)
 			entity.Pathfinder:MoveRandomly(false)
 		else
 			if entity.Pathfinder:HasPathToPos(target.Position) then
-				if game:GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false) then
+				if Game():GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false) then
 					entity.Velocity = mod:Lerp(entity.Velocity, (target.Position - entity.Position):Normalized() * speed, 0.25)
 				else
 					entity.Pathfinder:FindGridPath(target.Position, speed / 6, 500, false)
@@ -123,7 +122,7 @@ end
 mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, mod.skinnyUpdate, EntityType.ENTITY_SKINNY)
 
 function mod:rottyGreedDeath(entity)
-	if entity.Variant == 1 and game:IsGreedMode() and entity.Child then
+	if entity.Variant == 1 and Game():IsGreedMode() and entity.Child then
 		entity.Child:Kill()
 	end
 end

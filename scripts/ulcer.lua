@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -15,8 +14,9 @@ function mod:ulcerUpdate(entity)
 			entity:PlaySound(SoundEffect.SOUND_WORM_SPIT, 1.25, 0, false, 1)
 			Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOP_EXPLOSION, 0, entity.Position, Vector.Zero, entity).SpriteOffset = Vector(0, -12)
 
-			if Isaac.CountEntities(entity, EntityType.ENTITY_DIP, -1, -1) < 4 and entity.Pathfinder:HasPathToPos(target.Position, false) == true then
-				Isaac.Spawn(EntityType.ENTITY_DIP, math.random(0, 1), 0, entity.Position - Vector(0, 5), Vector.Zero, entity):ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+			if (entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) == true  and Isaac.CountEntities(nil, EntityType.ENTITY_FAMILIAR, FamiliarVariant.DIP, -1) < 8)
+			or (entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) == false and Isaac.CountEntities(entity, EntityType.ENTITY_DIP, -1, -1) < 4 and entity.Pathfinder:HasPathToPos(target.Position, false) == true) then
+				mod:ThrowDip(entity.Position, entity, entity.Position + ((target.Position - entity.Position):Normalized() * math.random(80, 120)), math.random(0, 1), -20)
 
 			else
 				local params = ProjectileParams()

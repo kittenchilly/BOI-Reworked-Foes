@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 

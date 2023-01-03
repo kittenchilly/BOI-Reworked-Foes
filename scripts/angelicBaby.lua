@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	FeatherShotSpeed = 10,
@@ -11,7 +10,7 @@ local Settings = {
 
 function mod:angelicBabyInit(entity)
 	if entity.Variant == 1 and entity.SubType == 0 and entity.SpawnerType == EntityType.ENTITY_GABRIEL then
-		entity:Morph(EntityType.ENTITY_BABY, 1 - entity.SpawnerVariant, 1 - entity.SpawnerVariant, entity:GetChampionColorIdx())
+		entity:Morph(entity.Type, 1 - entity.SpawnerVariant, 1 - entity.SpawnerVariant, entity:GetChampionColorIdx())
 	end
 end
 mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.angelicBabyInit, EntityType.ENTITY_BABY)
@@ -24,7 +23,7 @@ function mod:angelicBabyUpdate(entity)
 
 		if sprite:IsEventTriggered("Attack") then
 			entity.Velocity = (entity.Position - target.Position):Normalized() * Settings.PushBackSpeed
-			entity:PlaySound(SoundEffect.SOUND_CUTE_GRUNT, 1, 0, false, 1.1)
+			entity:PlaySound(SoundEffect.SOUND_CUTE_GRUNT, 1, 0, false, 1.05)
 			SFXManager():Play(SoundEffect.SOUND_ANGEL_WING, 1.2)
 
 			-- Helix feather shots
@@ -54,11 +53,12 @@ function mod:angelicBabyUpdate(entity)
 
 			if sprite:GetFrame() == 2 then
 				local params = ProjectileParams()
-				params.Color = skyBulletColor
+				params.Variant = ProjectileVariant.PROJECTILE_HUSH
+				params.Color = Color(1,1,1, 1, 0.25,0.25,0.25)
 				params.FallingAccelModifier = -0.15
 				params.BulletFlags = ProjectileFlags.CHANGE_FLAGS_AFTER_TIMEOUT
 				params.ChangeFlags = ProjectileFlags.ANTI_GRAVITY
-				params.ChangeTimeout = 10
+				params.ChangeTimeout = 12
 
 				entity:FireProjectiles(entity.Position, Vector(Settings.LightShotSpeed, 0), 6, params)
 			end

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -35,7 +34,7 @@ function mod:fallenUrielUpdate(entity)
 
 		elseif entity.State == NpcState.STATE_ATTACK4 then
 			if sprite:IsEventTriggered("Shoot") then
-				local laser_ent_pair = {laser = EntityLaser.ShootAngle(1, entity.Position - Vector(0, 40), 90, 20, Vector.Zero, entity), entity}
+				local laser_ent_pair = {laser = EntityLaser.ShootAngle(LaserVariant.THICK_RED, entity.Position - Vector(0, 40), 90, 20, Vector.Zero, entity), entity}
 				data.brim = laser_ent_pair.laser
 				data.brim.DepthOffset = entity.DepthOffset + 100
 				
@@ -45,7 +44,7 @@ function mod:fallenUrielUpdate(entity)
 				params.Color = brimstoneBulletColor
 				params.Scale = 1.25
 				params.CircleAngle = 0
-				entity:FireProjectiles(Vector(entity.Position.X, game:GetRoom():GetBottomRightPos().Y - 1), Vector(10, 16), 9, params)
+				entity:FireProjectiles(Vector(entity.Position.X, Game():GetRoom():GetBottomRightPos().Y - 1), Vector(10, 16), 9, params)
 			end
 			
 			if sprite:IsFinished("LaserShot") and (not data.brim or not data.brim:Exists()) then
@@ -62,7 +61,8 @@ function mod:fallenUrielUpdate(entity)
 				entity.V2 = target.Position
 
 				for i = -1, 1, 2 do
-					local laser_ent_pair = {laser = EntityLaser.ShootAngle(1, entity.Position - Vector(0, 40), (entity.V2 - (entity.Position - Vector(0, 40))):GetAngleDegrees() + (i * 35), 20, Vector.Zero, entity), entity}
+					local angle = (entity.V2 - (entity.Position - Vector(0, 40))):GetAngleDegrees() + (i * 35)
+					local laser_ent_pair = {laser = EntityLaser.ShootAngle(LaserVariant.THICK_RED, entity.Position - Vector(0, 40), angle, 20, Vector.Zero, entity), entity}
 					laser_ent_pair.laser.DepthOffset = entity.DepthOffset + 100
 				end
 			end
@@ -104,7 +104,7 @@ function mod:fallenGabrielUpdate(entity)
 			if sprite:IsPlaying("SpreadShot") and sprite:GetFrame() == 10 then
 				local params = ProjectileParams()
 				params.CircleAngle = 0.09
-				params.Scale = 1.5
+				params.Scale = 1.2
 				entity:FireProjectiles(entity.Position, Vector(8, 12), 9, params)
 				entity:PlaySound(SoundEffect.SOUND_THUMBS_DOWN, 0.6, 0, false, 1)
 			end
@@ -117,15 +117,16 @@ function mod:fallenGabrielUpdate(entity)
 			end
 			if entity.State == NpcState.STATE_ATTACK3 and sprite:GetFrame() == 10 and not sprite:IsPlaying("Float") then
 				entity:SetColor(Color(1,1,1, 1, 0.7,0,0), 15, 1, true, false)
+				SFXManager():Play(SoundEffect.SOUND_LIGHTBOLT_CHARGE, 2)
 			end
 
 		elseif entity.State == NpcState.STATE_ATTACK4 then
 			if sprite:IsEventTriggered("Shoot") then
 				for i = 0, 3 do
-					local laser_ent_pair = {laser = EntityLaser.ShootAngle(1, entity.Position - Vector(0, 40), (i * 90), 20, Vector.Zero, entity), entity}
+					local laser_ent_pair = {laser = EntityLaser.ShootAngle(LaserVariant.THICK_RED, entity.Position - Vector(0, 40), (i * 90), 20, Vector.Zero, entity), entity}
 					data.brim = laser_ent_pair.laser
 					
-					entity:FireProjectiles(entity.Position, Vector.FromAngle(data.brim.Angle - 45) * 10, 3, ProjectileParams())
+					entity:FireProjectiles(entity.Position - Vector(0, 20), Vector.FromAngle(data.brim.Angle - 45) * 10, 3, ProjectileParams())
 				end
 			end
 			
@@ -139,7 +140,7 @@ function mod:fallenGabrielUpdate(entity)
 			-- Laser swirls
 			if sprite:IsEventTriggered("Shoot") then
 				for i = 0, 3 do
-					Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ENEMY_BRIMSTONE_SWIRL, 0, entity.Position - Vector(0, 40) + (Vector.FromAngle(i * 90 - 45) * 10), Vector.FromAngle(i * 90 - 45) * 3, entity)
+					Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ENEMY_BRIMSTONE_SWIRL, 0, entity.Position - Vector(0, 40) + (Vector.FromAngle(i * 90 - 45) * 10), Vector.FromAngle(i * 90 - 45) * 2.5, entity)
 				end
 				entity.I2 = 1
 				entity.ProjectileCooldown = 60

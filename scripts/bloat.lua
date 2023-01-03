@@ -1,10 +1,9 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
 function mod:bloatInit(entity)
-	-- Replace green champion bloat's eyes with chargers
+	-- Replace green champion's eyes with Spitties
 	if entity.Variant == 11 and entity.SpawnerType == EntityType.ENTITY_PEEP and entity.SpawnerEntity.SubType == 1 then
 		entity:Remove()
 		Isaac.Spawn(EntityType.ENTITY_SPITTY, 0, 0, entity.Position, Vector.Zero, entity)
@@ -39,11 +38,8 @@ function mod:bloatUpdate(entity)
 					worm.Parent = entity
 					worm.DepthOffset = entity.DepthOffset + 50
 					worm.PositionOffset = Vector(0, -40)
-					
-					local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 2, entity.Position + Vector(-16 + (i * 32), 0), Vector.Zero, entity):ToEffect()
-					effect:GetSprite().Color = Color(0.4,0.8,0.4, 1, 0,0.4,0)
-					effect:GetSprite().Offset = Vector(0, -40)
-					effect.DepthOffset = entity.DepthOffset - 10
+
+					mod:shootEffect(entity, 2, Vector(-12 + (i * 24), -46), Color(0.4,0.8,0.4, 1, 0,0.4,0), 1, true)
 				end
 			end
 

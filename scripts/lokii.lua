@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	Cooldown = 60,
@@ -146,7 +145,7 @@ function mod:lokiiUpdate(entity)
 						sideH = 240
 					end
 					entity.V1 = target.Position + Vector.FromAngle(math.random(sideL, sideH)) * Settings.TPdistance
-					entity.V1 = game:GetRoom():FindFreePickupSpawnPosition(entity.V1, 40, true, false)
+					entity.V1 = Game():GetRoom():FindFreePickupSpawnPosition(entity.V1, 40, true, false)
 
 					entity.Position = entity.V1
 					entity.State = NpcState.STATE_STOMP
@@ -226,7 +225,7 @@ function mod:lokiiUpdate(entity)
 					entity.StateFrame = 1
 				
 				elseif sprite:IsEventTriggered("Shoot") then
-					local laser_ent_pair = {laser = EntityLaser.ShootAngle(1, entity.Position, 0 + ((entity.I1 - 1) * 180), 16, Vector(12 - ((entity.I1 - 1) * 24), entity.SpriteScale.Y * -18), entity), entity}
+					local laser_ent_pair = {laser = EntityLaser.ShootAngle(LaserVariant.THICK_RED, entity.Position, 0 + ((entity.I1 - 1) * 180), 16, Vector(12 - ((entity.I1 - 1) * 24), -18), entity), entity}
 					data.brim = laser_ent_pair.laser
 					data.brim.DepthOffset = entity.DepthOffset - 10
 
@@ -366,14 +365,15 @@ function mod:lokiiUpdate(entity)
 					if entity.State == NpcState.STATE_ATTACK4 then
 						local params = ProjectileParams()
 						params.TargetPosition = entity.Position
-						params.FallingAccelModifier = -0.025
+						params.FallingSpeedModifier = 1
+						params.FallingAccelModifier = -0.075
 
-						params.BulletFlags = ProjectileFlags.ORBIT_CW
-						entity:FireProjectiles(entity.Position, Vector(12, 4), 6, params)
-						
-						params.BulletFlags = ProjectileFlags.ORBIT_CCW
-						params.Scale = 1.25
-						entity:FireProjectiles(entity.Position, Vector(7, 4), 7, params)
+						if math.random(0, 1) == 1 then
+							params.BulletFlags = ProjectileFlags.ORBIT_CW
+						else
+							params.BulletFlags = ProjectileFlags.ORBIT_CCW
+						end
+						entity:FireProjectiles(entity.Position, Vector(11, 8), 8, params)
 					
 					
 					-- Triple attack

@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	MoveSpeed = 5,
@@ -94,7 +93,7 @@ function mod:gishUpdate(entity)
 				entity.Pathfinder:MoveRandomly(false)
 			else
 				if entity.Pathfinder:HasPathToPos(target.Position) then
-					if game:GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false) then
+					if Game():GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false) then
 						entity.Velocity = mod:Lerp(entity.Velocity, (target.Position - entity.Position):Normalized() * speed, 0.25)
 					else
 						entity.Pathfinder:FindGridPath(target.Position, speed / 6, 500, false)
@@ -143,7 +142,7 @@ function mod:gishUpdate(entity)
 				entity.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
 
 				spriteFlipX()
-				SFXManager():Play(SoundEffect.SOUND_MEAT_JUMPS, 1.25)
+				SFXManager():Play(SoundEffect.SOUND_MEAT_JUMPS)
 				entity:PlaySound(SoundEffect.SOUND_BOSS_LITE_ROAR, 0.8, 0, false, 1)
 
 			elseif sprite:IsEventTriggered("Land") then
@@ -157,6 +156,7 @@ function mod:gishUpdate(entity)
 				effect.DepthOffset = entity.DepthOffset + 10
 				if data.state == States.Land then
 					effect.Scale = 1.5
+					Game():MakeShockwave(entity.Position, 0.035, 0.025, 10)
 				end
 
 			
@@ -296,6 +296,7 @@ function mod:gishUpdate(entity)
 					params.Acceleration = 1.075
 					params.FallingAccelModifier = -0.175
 					entity:FireProjectiles(entity.Position, (target.Position - entity.Position):Normalized() * (Settings.ShotSpeed + 2), 0, params)
+					mod:shootEffect(entity, 3, Vector(0, -16), entity.SplatColor)
 				end
 			end
 

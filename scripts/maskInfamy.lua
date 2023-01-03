@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 local Settings = {
 	MoveSpeed = 4,
@@ -28,8 +27,6 @@ local States = {
 	Transition = 4,
 }
 
-local effectColor = Color(0.5,0.5,0.7, 1, 0.1,0.1,0.25)
-
 
 
 --[[ Mask ]]--
@@ -42,7 +39,7 @@ function mod:maskInfamyReplace(entity)
 	entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK | EntityFlag.FLAG_DONT_COUNT_BOSS_HP | EntityFlag.FLAG_NO_STATUS_EFFECTS)
 
 	if entity.SubType == 1 then
-		entity.SplatColor = effectColor
+		entity.SplatColor = ragManBloodColor
 	elseif entity.SubType == 2 then
 		entity.SplatColor = FiendFolio.ColorLemonYellow
 	end
@@ -88,7 +85,7 @@ function mod:maskInfamyUpdate(entity)
 			end
 
 			-- Charge
-			if entity.ProjectileCooldown <= 0 and game:GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false)
+			if entity.ProjectileCooldown <= 0 and Game():GetRoom():CheckLine(entity.Position, target.Position, 0, 0, false, false)
 			and entity.Position:Distance(target.Position) <= Settings.FrontRange then
 				if (entity.Position.X <= target.Position.X + Settings.SideRange and entity.Position.X >= target.Position.X - Settings.SideRange)
 				or (entity.Position.Y <= target.Position.Y + Settings.SideRange and entity.Position.Y >= target.Position.Y - Settings.SideRange) then
@@ -138,7 +135,7 @@ function mod:maskInfamyUpdate(entity)
 					data.state = States.Attack2
 					entity.ProjectileCooldown = Settings.StunTime + (entity.I1 * (Settings.StunTime / 2))
 					SFXManager():Play(SoundEffect.SOUND_HELLBOSS_GROUNDPOUND, 1)
-					game:ShakeScreen(Settings.CrashScreenShake)
+					Game():ShakeScreen(Settings.CrashScreenShake)
 
 					-- Rock shots
 					if entity.SubType == 0 or entity.I1 == 1 then
@@ -231,7 +228,7 @@ function mod:heartInfamyReplace(entity)
 	entity.HitPoints = entity.MaxHitPoints
 	
 	if entity.SubType == 1 then
-		entity.SplatColor = effectColor
+		entity.SplatColor = ragManBloodColor
 	elseif entity.SubType == 2 then
 		entity.SplatColor = FiendFolio.ColorLemonYellow
 	end
@@ -305,6 +302,9 @@ function mod:heartInfamyUpdate(entity)
 		elseif sprite:IsEventTriggered("Shoot") then
 			entity.EntityCollisionClass = EntityCollisionClass.ENTCOLL_ALL
 			SFXManager():Play(SoundEffect.SOUND_FORESTBOSS_STOMPS, 1 + (entity.I1 * 0.25))
+			if sprite:IsPlaying("HeartAttackAlt") then
+				Game():MakeShockwave(entity.Position, 0.035, 0.025, 10)
+			end
 
 			local params = ProjectileParams()
 			-- FF kidney champion
@@ -360,8 +360,12 @@ function mod:heartInfamyUpdate(entity)
 
 		if sprite:IsEventTriggered("Shoot") then
 			entity:PlaySound(SoundEffect.SOUND_BLOODSHOOT, 1.25, 0, false, 1)
-			Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 4, entity.Position + Vector(10, -24), Vector.Zero, entity):GetSprite().Color = entity.SplatColor
 			entity.I2 = entity.I2 + 1
+
+			local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF02, 4, entity.Position, Vector.Zero, entity):GetSprite()
+			effect.Scale = Vector(0.8, 0.8)
+			effect.Offset = Vector(8, entity.Scale * -24)
+			effect.Color = entity.SplatColor
 
 			local params = ProjectileParams()
 			if entity.SubType == 0 then
@@ -405,13 +409,14 @@ function mod:heartInfamyUpdate(entity)
 		local endPos = entity.Child.Position + Vector(0, Settings.BlackLaserOffset)
 
 		if not data.laser then
-			local laser_ent_pair = {laser = EntityLaser.ShootAngle(2, entity.Position, ((entity.Child.Position - entity.Position):GetAngleDegrees()), 0, Vector(0, Settings.BlackLaserOffset), entity), entity.Child}
+			local angle = ((entity.Child.Position - entity.Position):GetAngleDegrees())
+			local laser_ent_pair = {laser = EntityLaser.ShootAngle(LaserVariant.THIN_RED, entity.Position, angle, 0, Vector(0, Settings.BlackLaserOffset), entity), entity.Child}
 			data.laser = laser_ent_pair.laser
 
 			data.laser:SetMaxDistance(startPos:Distance(endPos))
 			data.laser.CollisionDamage = 0
 			data.laser.Mass = 0
-			data.laser:SetColor(effectColor, 0, 1, false, false)
+			data.laser:SetColor(Color(0.5,0.5,0.7, 1, 0.1,0.1,0.25), 0, 1, false, false)
 			data.laser.DepthOffset = -200
 
 		else

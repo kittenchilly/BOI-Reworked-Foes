@@ -1,5 +1,4 @@
 local mod = BetterMonsters
-local game = Game()
 
 
 
@@ -11,7 +10,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NPC_INIT, mod.lumpInit, EntityType.ENTITY_L
 function mod:lumpUpdate(entity)
 	local sprite = entity:GetSprite()
 	local target = entity:GetPlayerTarget()
-	local room = game:GetRoom()
+	local room = Game():GetRoom()
 
 	
 	entity.Velocity = Vector.Zero
@@ -33,7 +32,7 @@ function mod:lumpUpdate(entity)
 		mod:LoopingAnim(sprite, "Shake")
 		
 		-- Shoot if target is close enough
-		if entity.Position:Distance(game:GetNearestPlayer(entity.Position).Position) <= 220 and room:CheckLine(entity.Position, target.Position, 3, 0, false, false) then
+		if entity.Position:Distance(Game():GetNearestPlayer(entity.Position).Position) <= 220 and room:CheckLine(entity.Position, target.Position, 3, 0, false, false) then
 			entity.State = NpcState.STATE_ATTACK
 			sprite:Play("Spit", true)
 		end
